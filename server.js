@@ -70,13 +70,9 @@ const server = http.createServer(async (req, res) => {
     const pathname = parsedUrl.pathname;
     const query = parsedUrl.query;
 
-    // Also fix the breeds route
     if (pathname === '/breeds') {
         try {
-            // Default to showing dog breeds if no type is specified
             const animalType = query.type || 'dog';
-
-            // Get all breeds for the specified animal type using the correct method
             const breedResponse = await petfinder.animalData.breeds(animalType);
             const breeds = breedResponse.data.breeds;
 
