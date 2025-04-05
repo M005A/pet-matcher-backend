@@ -13,6 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
+    "@petfinder/petfinder-js": "^1.0.6",
+    "axios": "^1.8.4",
     "dotenv": "^16.4.7",
     "express": "^5.1.0"
   },
