@@ -20,3 +20,5 @@ We then integrated the **Petfinder API** to search for nearby shelters and displ
 
 ## 🚧 Challenges We Faced  
 - **Balancing depth and simplicity**: We wanted deep matches without overwhelming users with long forms or questions.
+- **Integrating AI and APIs**: Ensuring AI image analysis and Petfinder data worked smoothly together required careful tuning and testing.
+- **Emotional complexity**: Designing a product that navigates both joy and grief (many adopters come from loss) was emotionally challenging but crucial.
