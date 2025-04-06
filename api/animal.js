@@ -1,7 +1,7 @@
 // API/animal.js
 import { Client } from "@petfinder/petfinder-js";
 import { analyzePetImages } from './gemini.js';
-//import { generateMatchDescription } from './gemini.js';
+import { generateDescription } from './gemini.js';
 import axios from 'axios';
 import dotenv from "dotenv";
 
@@ -84,6 +84,7 @@ export const getNearByPetsBySuggestion = async (apiSuggestion,location) => {
             const cleaned = cleanAIResponse(apiSuggestion);
 
             parsedAI = JSON.parse(cleaned);
+            console.log(parsedAI);
         } catch (err) {
             console.error("Invalid JSON from AI:", err);
         }
@@ -122,9 +123,8 @@ export const getNearByPetsBySuggestion = async (apiSuggestion,location) => {
         }
 
         if (totalCount > 0) {
-            //const petsWithDescriptions = await generateMatchDescription(results);
-            //return petsWithDescriptions; 
-            return results
+            const petsWithDescriptions = await generateMatchDescriptions(results);
+            return petsWithDescriptions; 
 
         } else {
             console.warn("No pets found after relaxing all filters.");
@@ -136,24 +136,18 @@ export const getNearByPetsBySuggestion = async (apiSuggestion,location) => {
 
 const generateMatchDescriptions = async (results) => {
         try {
-            const descriptions = [];
-
             for (let i = 0; i < results.length; i++) {
                 const pet = results[i];
-                const description = pet.description; 
+                let description = pet.description;
                 if (typeof description !== 'string') {
                     description = description ? JSON.stringify(description) : 'No description available.';
                 }
+
                 const geminiDescription = await generateDescription(description);
-                descriptions.push(geminiDescription);
+                pet.AIDescription = geminiDescription;
             }
 
-            const matchedPetsWithDescriptions = results.map((pet, index) => ({
-                ...pet,  
-                matchDescription: descriptions[index]  
-            }));
-
-            return matchedPetsWithDescriptions; 
+            return results;
         } catch (error) {
             console.error("Error generating descriptions:", error);
             return []; 

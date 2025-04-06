@@ -12,7 +12,6 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
-
 app.get('/submitForm', async (req, res) => {
     // Access query parameters from the URL
     console.log("Query Params: ", req.query);
@@ -39,5 +38,5 @@ app.get('/submitForm', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
-});
+})
 
