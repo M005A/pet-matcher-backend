@@ -14,44 +14,44 @@ const petfinder = new Client({
 
 const locationApiKey = process.env.GEOLOCATION_KEY;
 
-export const getRandomPet = async (photoURLS) => {
+export const getRandomPet = async (photoURLS,location) => {
     try {
-        console.log("Fetching a random pet from Petfinder...");
+        // console.log("Fetching a random pet from Petfinder...");
 
-        let animal = null;
-        let attempts = 0;
-        const maxAttempts = 5;
+        // let animal = null;
+        // let attempts = 0;
+        // const maxAttempts = 5;
 
-        while (!animal && attempts < maxAttempts) {
-            attempts++;
-            console.log(`Attempt ${attempts} to find an animal with photos`);
+        // while (!animal && attempts < maxAttempts) {
+        //     attempts++;
+        //     console.log(`Attempt ${attempts} to find an animal with photos`);
 
-            const response = await petfinder.animal.search({
-                limit: 10,
-                page: Math.floor(Math.random() * 5) + 1,
-                status: 'adoptable',
-                sort: 'random',
-                has_photos: true
-            });
+        //     const response = await petfinder.animal.search({
+        //         limit: 10,
+        //         page: Math.floor(Math.random() * 5) + 1,
+        //         status: 'adoptable',
+        //         sort: 'random',
+        //         has_photos: true
+        //     });
 
-            animal = response.data.animals.find(a => a.photos && a.photos.length > 0);
+        //     animal = response.data.animals.find(a => a.photos && a.photos.length > 0);
 
-            if (!animal && response.data.animals.length > 0) {
-                console.log(`Found ${response.data.animals.length} animals, but none have photos. Trying again...`);
-            }
-        }
+        //     if (!animal && response.data.animals.length > 0) {
+        //         console.log(`Found ${response.data.animals.length} animals, but none have photos. Trying again...`);
+        //     }
+        // }
 
-        if (!animal) {
-            console.log("Could not find any animals with photos after multiple attempts.");
-            return;
-        }
+        // if (!animal) {
+        //     console.log("Could not find any animals with photos after multiple attempts.");
+        //     return;
+        // }
 
-        console.log("\n===== PET DETAILS =====");
-        console.log(`Name: ${animal.name}`);
-        console.log(`Type: ${animal.type}`);
-        console.log(`Breed: ${animal.breeds.primary}`);
-        console.log(`Age: ${animal.age}`);
-        console.log(`Gender: ${animal.gender}`);
+        // console.log("\n===== PET DETAILS =====");
+        // console.log(`Name: ${animal.name}`);
+        // console.log(`Type: ${animal.type}`);
+        // console.log(`Breed: ${animal.breeds.primary}`);
+        // console.log(`Age: ${animal.age}`);
+        // console.log(`Gender: ${animal.gender}`);
         
 
         //const photoUrl = animal.photos[0].medium;
@@ -60,7 +60,7 @@ export const getRandomPet = async (photoURLS) => {
         const apiSuggestion = await analyzePetImages(photoURLS);
         console.log("\n===== GEMINI ANALYSIS =====");
         console.log(apiSuggestion);
-        return getNearByPetsBySuggestion(apiSuggestion)
+        return getNearByPetsBySuggestion(apiSuggestion,location);
 
     } catch (error) {
         console.error("Error:", error.message);
@@ -71,15 +71,18 @@ export const getRandomPet = async (photoURLS) => {
 
 export const getNearByPetsBySuggestion = async (apiSuggestion,location) => {
     try {
-        const response = await axios.post('https://www.googleapis.com/geolocation/v1/geolocate?key=' + locationApiKey);
-        const location = response.data.location;
-        const latitude = location.lat;
-        const longitude = location.lng;
+        //const response = await axios.post('https://www.googleapis.com/geolocation/v1/geolocate?key=' + locationApiKey);
+        //const location = response.data.location;
+        //console.log("Location: ", location);
+        const latitude = location.latitude;
+        const longitude = location.longitude;
         const traitPriority = ['color', 'coat', 'age', 'size', 'type'];
         console.log("looking for a pet..");
         let parsedAI;
         try {
+            console.log("PLUH", apiSuggestion);
             const cleaned = cleanAIResponse(apiSuggestion);
+
             parsedAI = JSON.parse(cleaned);
             console.log(parsedAI);
         } catch (err) {
@@ -90,11 +93,13 @@ export const getNearByPetsBySuggestion = async (apiSuggestion,location) => {
         let removed = [];
         const searchPets = async (filters) => {
             try {
+                console.log("Searching for pets with filters:", filters);
                 const shelterResponse = await petfinder.animal.search({
                     ...filters,
                     location: `${latitude},${longitude}`,
                     distance: 100,
                 });
+                
                 const totalCount = shelterResponse.data.pagination.total_count;
                 const results = shelterResponse.data.animals;
                 console.log(results);
@@ -150,6 +155,7 @@ const generateMatchDescriptions = async (results) => {
 };
 
 const cleanAIResponse = (text) => {
+    console.log("text", text);
     text = text.replace(/^\s*```(?:json)?\s*/i, '');
     text = text.replace(/\s*```$/i, '');
     text = text.replace(/[\u200B-\u200D\uFEFF]/g, '');
