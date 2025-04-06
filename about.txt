@@ -1,0 +1,22 @@
+# 🐾 Pawfect Match: Our Story
+
+## 💡 Inspiration 
+Every year, thousands of incredible shelter pets are overlooked—not because they're unlovable, but because they don't get the chance to be truly seen. We were inspired by this disconnect. So many people want to adopt, but struggle to find a pet that genuinely fits their life. We thought: what if we could change that? What if finding your furry companion felt more like finding a soulmate?
+
+## 📚 What We Learned 
+- How emotional connection often drives adoption more than just filters or checkboxes.
+- The importance of user experience in building trust between adopters and shelters.
+- How to integrate behavioral and lifestyle of various pet data to create meaningful matches between humans and animals.
+- How to use Generative AI to match pet owners based on user preferences and emotional cues.
+- How to rapidly create a full-stack application from idea to execution.
+
+We also dove into ethical considerations—how to avoid bias, how to handle sensitive data responsibly, and how to represent animals as individuals, not just listings.
+
+## 🛠️ How We Built It
+The idea started with a simple goal: make adoption more heartfelt and human. We brainstormed ways to use technology to create emotional matches and began sketching ideas for the user experience. The design phase went through several iterations—we changed our minds a few times before arriving at a direction that felt just right: personal, warm, and intuitive.
+We built the front end using **React** and **Next.js** to deliver a fast, responsive, and modern user experience. For the backend, we used **Express.js**, giving us flexibility to handle matching logic and third-party APIs.
+To enhance our matching process, we used **Gemini AI** to analyze pictures of pets—detecting features that may emotionally resonate with the user. This helped surface pets that users would be more likely to connect with at first glance.
+We then integrated the **Petfinder API** to search for nearby shelters and display real-time data on adoptable pets—helping users find their Pawfect Match.
+
+## 🚧 Challenges We Faced  
+- **Balancing depth and simplicity**: We wanted deep matches without overwhelming users with long forms or questions.
