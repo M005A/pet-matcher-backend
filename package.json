@@ -16,7 +16,8 @@
     "@petfinder/petfinder-js": "^1.0.6",
     "axios": "^1.8.4",
     "dotenv": "^16.4.7",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

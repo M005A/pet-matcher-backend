@@ -8,6 +8,7 @@ const gemini_api_key = process.env.GEMINI_KEY;
 console.log("Gemini API Key:", gemini_api_key ? "Found API key" : "No API key found");
 
 const googleAI = new GoogleGenerativeAI(gemini_api_key);
+const GEMINI_API_URL = "https://generativeai.googleapis.com/v1beta3/models/gemini-1.5:generateText"; 
 
 
 const visionModel = googleAI.getGenerativeModel({
@@ -18,40 +19,64 @@ const visionModel = googleAI.getGenerativeModel({
     }
 });
 
-export const analyzePetImage = async (photoUrl) => {
+export const analyzePetImages = async (photoUrls) => {
     try {
-  
-        console.log(`Photo URL: ${photoUrl}`);
 
-        const imageResponse = await axios.get(photoUrl, { responseType: 'arraybuffer' });
-        const imageBuffer = Buffer.from(imageResponse.data);
-        const base64Image = imageBuffer.toString('base64');
-
-        const parts = [
-            {
+        const parts = await Promise.all(photoUrls.map(async (photoUrl) => {
+            const imageResponse = await axios.get(photoUrl, { responseType: 'arraybuffer' });
+            const imageBuffer = Buffer.from(imageResponse.data);
+            const base64Image = imageBuffer.toString('base64');
+            return {
                 inlineData: {
                     data: base64Image,
                     mimeType: imageResponse.headers['content-type']
                 }
-            },
-            {
-                text: `Analyze this image of a pet and suggest a Petfinder query to find similar pets. Use only these categories in your response: type (e.g. dog, cat, bird), size, age (baby, young, adult, senior), coat (short, medium, long, wire, hairless, curly), and color (ONLY ONE, EXACTLY AS FOLLOWING: Apricot / Beige, Bicolor, Black, Brindle, Brown / Chocolate, Golden, Gray / Blue / Silver, Harlequin, Merle (Blue),  Merle (Red), Red / Chestnut / Orange, Sable, Tricolor (Brown, Black, & White), White / Cream, Yellow / Tan / Blond / Fawn ). Return only a valid JSON object with these properties. Do not include code blocks, explanations, or formatting — just pure JSON.`                //text: `Analyze this image of a pet and suggest a Petfinder query to find similar pets. Use only these categories in your response: type (dog,cat,bird,etc), size, and age (baby, young, adult, senior). Provide the query in raw JSON format with NO markdown formatting, just the pure JSON itself.`
-            }
-        ];
+            };
+        }));
+
+        parts.push({
+            text: `A user is looking to adop one pet. The user picked these images as a perference. Analyze all these images of pets and suggest a Petfinder query to find one similar pet based on all the common characteristics across all images. Consider a pet the user is likely to adopt. Consider personality traits as well. Use only these categories in your response: type (e.g. dog, cat, bird), size, age (baby, young, adult, senior), coat (short, medium, long, wire, hairless, curly), and color (ONLY ONE, EXACTLY AS FOLLOWING: Apricot / Beige, Bicolor, Black, Brindle, Brown / Chocolate, Golden, Gray / Blue / Silver, Harlequin, Merle (Blue),  Merle (Red), Red / Chestnut / Orange, Sable, Tricolor (Brown, Black, & White), White / Cream, Yellow / Tan / Blond / Fawn ). Return only a valid JSON object with these properties. Do not include code blocks, explanations, or formatting — just pure JSON.`
+        });
 
         const result = await visionModel.generateContent({
             contents: [{ role: "user", parts }]
         });
 
         let apiSuggestion = result.response.text();
-        apiSuggestion = apiSuggestion.replace(/^```json\s*/i, '');
-        apiSuggestion = apiSuggestion.replace(/\s*```$/i, '');
-
+        apiSuggestion = apiSuggestion.replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
         return apiSuggestion
-        
+
 
     } catch (error) {
         console.error("Error:", error.message);
         if (error.stack) console.error(error.stack);
     }
-}
+};
+/** 
+export const generateMatchDescription = async (petDescription) => { 
+    try {
+        // Prepare the input for the model
+        console.log(petDescription);
+        const parts = [
+            {
+                text: `Please generate a short, emotional description for the following pet: "${petDescription}". Include reasons why this pet is a good match and a bit of its background to emotionally connect with the user.`
+            }
+        ];
+
+        // Make the API call to the text model
+        const result = await visionModel.generateContent({
+            contents: [{ role: "user", parts }]
+        });
+
+        // Assuming the response contains the generated description in 'result.response.text()'
+        const geminiDescription = result.response.text().trim();
+        console.log("geminiDescription" + geminiDescription);
+
+        return geminiDescription;
+
+    } catch (error) {
+        console.error("Error generating description:", error.message);
+        if (error.stack) console.error(error.stack);
+        throw new Error('Error generating description from text model');
+    }
+};**/

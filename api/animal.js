@@ -1,6 +1,7 @@
 // API/animal.js
 import { Client } from "@petfinder/petfinder-js";
-import { analyzePetImage } from './gemini.js';
+import { analyzePetImages } from './gemini.js';
+//import { generateMatchDescription } from './gemini.js';
 import axios from 'axios';
 import dotenv from "dotenv";
 
@@ -13,7 +14,7 @@ const petfinder = new Client({
 
 const locationApiKey = process.env.GEOLOCATION_KEY;
 
-export const getRandomPet = async (photoUrl) => {
+export const getRandomPet = async (photoURLS) => {
     try {
         console.log("Fetching a random pet from Petfinder...");
 
@@ -51,14 +52,15 @@ export const getRandomPet = async (photoUrl) => {
         console.log(`Breed: ${animal.breeds.primary}`);
         console.log(`Age: ${animal.age}`);
         console.log(`Gender: ${animal.gender}`);
+        
 
-        const photoUrl = animal.photos[0].medium;
+        //const photoUrl = animal.photos[0].medium;
+        //console.log(`photoUrl: ${photoUrl}`)
 
-
-        const apiSuggestion = await analyzePetImage(photoUrl);
+        const apiSuggestion = await analyzePetImages(photoURLS);
         console.log("\n===== GEMINI ANALYSIS =====");
         console.log(apiSuggestion);
-        //GetNearByPetsBySuggestion(apiSuggestion)
+        return getNearByPetsBySuggestion(apiSuggestion)
 
     } catch (error) {
         console.error("Error:", error.message);
@@ -74,7 +76,7 @@ export const getNearByPetsBySuggestion = async (apiSuggestion) => {
         const latitude = location.lat;
         const longitude = location.lng;
         const traitPriority = ['color', 'coat', 'age', 'size', 'type'];
-
+        console.log("looking for a pet..");
         let parsedAI;
         try {
             const cleaned = cleanAIResponse(apiSuggestion);
@@ -90,10 +92,11 @@ export const getNearByPetsBySuggestion = async (apiSuggestion) => {
                 const shelterResponse = await petfinder.animal.search({
                     ...filters,
                     location: `${latitude},${longitude}`,
-                    distance: 20,
+                    distance: 100,
                 });
                 const totalCount = shelterResponse.data.pagination.total_count;
                 const results = shelterResponse.data.animals;
+                console.log(results);
                 return { results, totalCount };
             } catch (err) {
                 console.error("Search error:", err.message);
@@ -114,13 +117,42 @@ export const getNearByPetsBySuggestion = async (apiSuggestion) => {
         }
 
         if (totalCount > 0) {
-            return results;
+            //const petsWithDescriptions = await generateMatchDescription(results);
+            //return petsWithDescriptions; 
+            return results
+
         } else {
             console.warn("No pets found after relaxing all filters.");
         }
     } catch (error) {
         console.error('Error getting user location:', error);
     }
+};
+
+const generateMatchDescriptions = async (results) => {
+        try {
+            const descriptions = [];
+
+            for (let i = 0; i < results.length; i++) {
+                const pet = results[i];
+                const description = pet.description; 
+                if (typeof description !== 'string') {
+                    description = description ? JSON.stringify(description) : 'No description available.';
+                }
+                const geminiDescription = await generateDescription(description);
+                descriptions.push(geminiDescription);
+            }
+
+            const matchedPetsWithDescriptions = results.map((pet, index) => ({
+                ...pet,  
+                matchDescription: descriptions[index]  
+            }));
+
+            return matchedPetsWithDescriptions; 
+        } catch (error) {
+            console.error("Error generating descriptions:", error);
+            return []; 
+        }
 };
 
 const cleanAIResponse = (text) => {
