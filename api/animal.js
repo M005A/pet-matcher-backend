@@ -16,47 +16,7 @@ const locationApiKey = process.env.GEOLOCATION_KEY;
 
 export const getRandomPet = async (photoURLS,location) => {
     try {
-        // console.log("Fetching a random pet from Petfinder...");
-
-        // let animal = null;
-        // let attempts = 0;
-        // const maxAttempts = 5;
-
-        // while (!animal && attempts < maxAttempts) {
-        //     attempts++;
-        //     console.log(`Attempt ${attempts} to find an animal with photos`);
-
-        //     const response = await petfinder.animal.search({
-        //         limit: 10,
-        //         page: Math.floor(Math.random() * 5) + 1,
-        //         status: 'adoptable',
-        //         sort: 'random',
-        //         has_photos: true
-        //     });
-
-        //     animal = response.data.animals.find(a => a.photos && a.photos.length > 0);
-
-        //     if (!animal && response.data.animals.length > 0) {
-        //         console.log(`Found ${response.data.animals.length} animals, but none have photos. Trying again...`);
-        //     }
-        // }
-
-        // if (!animal) {
-        //     console.log("Could not find any animals with photos after multiple attempts.");
-        //     return;
-        // }
-
-        // console.log("\n===== PET DETAILS =====");
-        // console.log(`Name: ${animal.name}`);
-        // console.log(`Type: ${animal.type}`);
-        // console.log(`Breed: ${animal.breeds.primary}`);
-        // console.log(`Age: ${animal.age}`);
-        // console.log(`Gender: ${animal.gender}`);
-        
-
-        //const photoUrl = animal.photos[0].medium;
-        //console.log(`photoUrl: ${photoUrl}`)
-
+     
         const apiSuggestion = await analyzePetImages(photoURLS);
         console.log("\n===== GEMINI ANALYSIS =====");
         console.log(apiSuggestion);
@@ -71,9 +31,6 @@ export const getRandomPet = async (photoURLS,location) => {
 
 export const getNearByPetsBySuggestion = async (apiSuggestion,location) => {
     try {
-        //const response = await axios.post('https://www.googleapis.com/geolocation/v1/geolocate?key=' + locationApiKey);
-        //const location = response.data.location;
-        //console.log("Location: ", location);
         const latitude = location.latitude;
         const longitude = location.longitude;
         const traitPriority = ['color', 'coat', 'age', 'size', 'type'];
@@ -134,6 +91,20 @@ export const getNearByPetsBySuggestion = async (apiSuggestion,location) => {
     }
 };
 
+
+const getOrganizationName = async (orgId) => {
+
+    try {
+        const orgRes = await petfinder.organization.show(orgId);
+        return orgRes.data.organization.name;
+    } catch (err) {
+        console.error(`Failed to fetch organization for ${orgId}:`, err.message);
+        return "Unknown Shelter";
+    }
+};
+
+
+
 const generateMatchDescriptions = async (results) => {
         try {
             for (let i = 0; i < results.length; i++) {
@@ -144,7 +115,9 @@ const generateMatchDescriptions = async (results) => {
                 }
 
                 const geminiDescription = await generateDescription(description);
+                const shelterName = await getOrganizationName(pet.organization_id);
                 pet.AIDescription = geminiDescription;
+                pet.ShelterName = shelterName
             }
 
             return results;
