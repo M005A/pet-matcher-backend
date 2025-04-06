@@ -52,14 +52,13 @@ export const analyzePetImages = async (photoUrls) => {
         if (error.stack) console.error(error.stack);
     }
 };
-/** 
-export const generateMatchDescription = async (petDescription) => { 
+
+export const generateDescription = async (petDescription) => { 
     try {
-        // Prepare the input for the model
-        console.log(petDescription);
+
         const parts = [
             {
-                text: `Please generate a short, emotional description for the following pet: "${petDescription}". Include reasons why this pet is a good match and a bit of its background to emotionally connect with the user.`
+                text: `Please generate a short (3 sentences), emotional description for the following pet: "${petDescription}". Include reasons why this pet is a good match and a bit of its background to emotionally connect with the user. keep is short and relevant. Start it with : petname is... etc. Dont make it first person, make it like someone is telling the user about the animal, convinceing them to adpot.`
             }
         ];
 
@@ -68,9 +67,7 @@ export const generateMatchDescription = async (petDescription) => {
             contents: [{ role: "user", parts }]
         });
 
-        // Assuming the response contains the generated description in 'result.response.text()'
         const geminiDescription = result.response.text().trim();
-        console.log("geminiDescription" + geminiDescription);
 
         return geminiDescription;
 
@@ -79,4 +76,4 @@ export const generateMatchDescription = async (petDescription) => {
         if (error.stack) console.error(error.stack);
         throw new Error('Error generating description from text model');
     }
-};**/
+};

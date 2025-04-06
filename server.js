@@ -9,11 +9,11 @@ app.get('/', (req, res) => {
 
 
 app.get('/submitForm', (req, res) => {
-    //getting 10 images
+
     const {urls , location} = req.body;
 
     try {
-        const matched_pet = getNearByPetsBySuggestion(urls)
+        const matched_pet = getNearByPetsBySuggestion(urls,location)
         return matched_pet
 
     } catch (err) {
@@ -24,5 +24,5 @@ app.get('/submitForm', (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
-});
+})
 
