@@ -15,7 +15,7 @@ const visionModel = googleAI.getGenerativeModel({
     model: "gemini-1.5-flash",
     generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 256,
+        maxOutputTokens: 512,
     }
 });
 
@@ -35,7 +35,7 @@ export const analyzePetImages = async (photoUrls) => {
         }));
 
         parts.push({
-            text: `A user is looking to adop one pet. The user picked these images as a perference. Analyze all these images of pets and suggest a Petfinder query to find one similar pet based on all the common characteristics across all images. Consider a pet the user is likely to adopt. Consider personality traits as well. Use only these categories in your response: type (e.g. dog, cat, bird), size, age (baby, young, adult, senior), coat (short, medium, long, wire, hairless, curly), and color (ONLY ONE, EXACTLY AS FOLLOWING: Apricot / Beige, Bicolor, Black, Brindle, Brown / Chocolate, Golden, Gray / Blue / Silver, Harlequin, Merle (Blue),  Merle (Red), Red / Chestnut / Orange, Sable, Tricolor (Brown, Black, & White), White / Cream, Yellow / Tan / Blond / Fawn ). Return only a valid JSON object with these properties. Do not include code blocks, explanations, or formatting — just pure JSON.`
+            text: `A user is looking to adop one pet. The user picked these images as a perference. Analyze all these images of pets and suggest a Petfinder query to find one similar pet based on all the common characteristics across all images. Consider a pet the user is likely to adopt. Consider personality traits as well. Use only these categories in your response: type (e.g. dog, cat, bird), size, age (baby, young, adult, senior), coat (short, medium, long, wire, hairless, curly), and color (ONLY ONE, EXACTLY AS FOLLOWING: Apricot / Beige, Bicolor, Black, Brindle, Brown / Chocolate, Golden, Gray / Blue / Silver, Harlequin, Merle (Blue),  Merle (Red), Red / Chestnut / Orange, Sable, Tricolor (Brown, Black, & White), White / Cream, Yellow / Tan / Blond / Fawn ). Return only a valid JSON object with these properties. Do not include code blocks, explanations, or formatting ï¿½ just pure JSON.`
         });
 
         const result = await visionModel.generateContent({
