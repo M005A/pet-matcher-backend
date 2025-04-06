@@ -127,7 +127,7 @@ async function GetNearByPets() {
 }
 
 
- Run the main function
+//Run the main function
 console.log("Starting Pet Matcher Backend...");
 analyzeRandomPet().then(() => {
     console.log("\nProcess complete. Run again with 'npm run dev' to analyze another pet.");
