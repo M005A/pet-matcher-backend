@@ -81,7 +81,7 @@ async function analyzeRandomPet() {
                 }
             },
             {
-                text: `Analyze this image of a pet and suggest a Petfinder query to find similar pets. Use only these categories in your response: type, size, and age (baby, young, adult, senior). Provide the query in raw JSON format with NO markdown formatting, just the pure JSON itself.`
+                text: `Analyze this image of a pet and suggest a Petfinder query to find similar pets. Use only these categories in your response: type (dog,cat,bird,etc), size, and age (baby, young, adult, senior). Provide the query in raw JSON format with NO markdown formatting, just the pure JSON itself.`
             }
         ];
 
@@ -95,8 +95,9 @@ async function analyzeRandomPet() {
         apiSuggestion = apiSuggestion.replace(/\s*```$/i, '');
 
 
-            console.log("\n===== GEMINI ANALYSIS =====");
-            console.log(apiSuggestion);
+        console.log("\n===== GEMINI ANALYSIS =====");
+        console.log(apiSuggestion);
+        GetNearByPetsBySuggestion(apiSuggestion)
 
     } catch (error) {
         console.error("Error:", error.message);
@@ -104,7 +105,14 @@ async function analyzeRandomPet() {
     }
 }
 
-async function GetNearByPets() {
+
+function cleanAIResponse(text) {
+    
+    text = text.replace(/^```json\s*/i, '');
+    text = text.replace(/```$/i, '');
+    return text.trim();
+}
+async function GetNearByPetsBySuggestion(apiSuggestion) {
     try {
         const response = await axios.post('https://www.googleapis.com/geolocation/v1/geolocate?key=' + locationApiKey);
         const location = response.data.location;
@@ -112,8 +120,17 @@ async function GetNearByPets() {
         const longitude = location.lng;
 
         console.log(`User's location is: Latitude: ${latitude}, Longitude: ${longitude}`);
-        
+        let parsedAI;
+        try {
+            const cleaned = cleanAIResponse(apiSuggestion);
+            parsedAI = JSON.parse(cleaned);
+            console.log(parsedAI)
+        } catch (err) {
+            console.error("Invalid JSON from AI:", err);
+        }
+
         const shelterResponse = await petfinder.animal.search({
+            ...parsedAI,
             location: `${latitude},${longitude}`,
             distance: 20,
         });
@@ -125,7 +142,6 @@ async function GetNearByPets() {
         console.error('Error getting user location:', error);
     }
 }
-
 
 //Run the main function
 console.log("Starting Pet Matcher Backend...");
