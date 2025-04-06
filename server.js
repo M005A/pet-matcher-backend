@@ -3,12 +3,15 @@ import dotenv from "dotenv";
 import { Client } from "@petfinder/petfinder-js";
 import axios from 'axios';
 
+
+
 dotenv.config();
 
 const gemini_api_key = process.env.GEMINI_KEY;
 console.log("Gemini API Key:", gemini_api_key ? "Found API key" : "No API key found");
 
 const googleAI = new GoogleGenerativeAI(gemini_api_key);
+const locationApiKey = process.env.GEOLOCATION_KEY;
 
 const visionModel = googleAI.getGenerativeModel({
     model: "gemini-1.5-flash",
@@ -101,7 +104,30 @@ async function analyzeRandomPet() {
     }
 }
 
-// Run the main function
+async function GetNearByPets() {
+    try {
+        const response = await axios.post('https://www.googleapis.com/geolocation/v1/geolocate?key=' + locationApiKey);
+        const location = response.data.location;
+        const latitude = location.lat;
+        const longitude = location.lng;
+
+        console.log(`User's location is: Latitude: ${latitude}, Longitude: ${longitude}`);
+        
+        const shelterResponse = await petfinder.animal.search({
+            location: `${latitude},${longitude}`,
+            distance: 20,
+        });
+
+        const shelters = shelterResponse.data;
+        console.log(shelters);
+
+    } catch (error) {
+        console.error('Error getting user location:', error);
+    }
+}
+
+
+ Run the main function
 console.log("Starting Pet Matcher Backend...");
 analyzeRandomPet().then(() => {
     console.log("\nProcess complete. Run again with 'npm run dev' to analyze another pet.");
