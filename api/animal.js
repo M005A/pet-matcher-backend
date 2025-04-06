@@ -81,7 +81,7 @@ export const getNearByPetsBySuggestion = async (apiSuggestion,location) => {
 
         if (totalCount > 0) {
             const petsWithDescriptions = await generateMatchDescriptions(results);
-            return petsWithDescriptions; 
+            return petsWithDescriptions[0]; 
 
         } else {
             console.warn("No pets found after relaxing all filters.");
