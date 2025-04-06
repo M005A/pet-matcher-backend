@@ -81,8 +81,7 @@ async function analyzeRandomPet() {
                 }
             },
             {
-                text: `Analyze this image of a pet and suggest a Petfinder query to find similar pets. Use only these categories in your response: type (e.g. dog, cat, bird), size, age (baby, young, adult, senior), coat (short, medium, long, wire, hairless, curly), and color (Agouti, Black, Blue / Gray, Brown / Chocolate, Cream, Lilac, Orange / Red, Sable, Silver Marten, Tan, Tortoiseshell, White). Return only a valid JSON object with these properties. Do not include code blocks, explanations, or formatting — just pure JSON.`
-                //text: `Analyze this image of a pet and suggest a Petfinder query to find similar pets. Use only these categories in your response: type (dog,cat,bird,etc), size, and age (baby, young, adult, senior). Provide the query in raw JSON format with NO markdown formatting, just the pure JSON itself.`
+                text: `Analyze this image of a pet and suggest a Petfinder query to find similar pets. Use only these categories in your response: type (e.g. dog, cat, bird), size, age (baby, young, adult, senior), coat (short, medium, long, wire, hairless, curly), and color (ONLY ONE, EXACTLY AS FOLLOWING: Apricot / Beige, Bicolor, Black, Brindle, Brown / Chocolate, Golden, Gray / Blue / Silver, Harlequin, Merle (Blue),  Merle (Red), Red / Chestnut / Orange, Sable, Tricolor (Brown, Black, & White), White / Cream, Yellow / Tan / Blond / Fawn ). Return only a valid JSON object with these properties. Do not include code blocks, explanations, or formatting — just pure JSON.`                //text: `Analyze this image of a pet and suggest a Petfinder query to find similar pets. Use only these categories in your response: type (dog,cat,bird,etc), size, and age (baby, young, adult, senior). Provide the query in raw JSON format with NO markdown formatting, just the pure JSON itself.`
             }
         ];
 
@@ -110,11 +109,7 @@ function cleanAIResponse(text) {
     
     text = text.replace(/^\s*```(?:json)?\s*/i, '');
     text = text.replace(/\s*```$/i, '');
-
-    // Remove zero-width spaces, BOMs, and other non-printable characters
     text = text.replace(/[\u200B-\u200D\uFEFF]/g, '');
-
-    // Try to isolate only the JSON part (greedy match between first { and last })
     const jsonMatch = text.match(/{[\s\S]*}/);
     if (jsonMatch) {
         return jsonMatch[0].trim();
@@ -128,6 +123,8 @@ async function GetNearByPetsBySuggestion(apiSuggestion) {
         const location = response.data.location;
         const latitude = location.lat;
         const longitude = location.lng;
+        const traitPriority = ['color', 'coat', 'age', 'size', 'type'];
+            
 
         console.log(`User's location is: Latitude: ${latitude}, Longitude: ${longitude}`);
         let parsedAI;
@@ -139,14 +136,45 @@ async function GetNearByPetsBySuggestion(apiSuggestion) {
             console.error("Invalid JSON from AI:", err);
         }
 
-        const shelterResponse = await petfinder.animal.search({
-            ...parsedAI,
-            location: `${latitude},${longitude}`,
-            distance: 100,
-        });
+        let filters = { ...parsedAI };
+        let removed = [];
+        const searchPets = async (filters) => {
+            try {
+                const shelterResponse = await petfinder.animal.search({
+                    ...filters,
+                    location: `${latitude},${longitude}`,
+                    distance: 20, 
+                });
+                const totalCount = shelterResponse.data.pagination.total_count;
+                const results = shelterResponse.data.animals;
+                return { results, totalCount };
+            } catch (err) {
+                console.error("Search error:", err.message);
+                return { results: [], totalCount: 0 };
+            }
+        };
 
-        const shelters = shelterResponse.data;
-        console.log(shelters);
+        let { results, totalCount } = await searchPets(filters);
+
+        let i = 0;
+        console.log("total:count" + totalCount);
+        while (totalCount === 0 && i < traitPriority.length - 1) { 
+            const traitToRemove = traitPriority[i];
+            removed.push(traitToRemove);
+            delete filters[traitToRemove]; 
+            console.log(`No results — removed least important trait: ${traitToRemove}`);
+
+            ({ results, totalCount } = await searchPets(filters));
+            i++;
+        }
+
+        if (totalCount > 0) {
+            console.log(`Found ${results.length} pets with filters:`, filters);
+            console.log(results); 
+            return results;
+        } else {
+            console.warn("No pets found after relaxing all filters.");
+        }
 
     } catch (error) {
         console.error('Error getting user location:', error);
